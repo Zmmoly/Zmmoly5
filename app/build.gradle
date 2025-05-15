@@ -1,0 +1,91 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+
+android {
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.example.aiassistant"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    
+    // مهمة مخصصة لتنزيل نماذج ML أثناء بناء التطبيق
+    task downloadMLModels(type: Exec) {
+        // التحقق من وجود Python
+        def pythonCommand = "python"
+        try {
+            exec {
+                commandLine "python", "--version"
+            }
+        } catch (Exception e) {
+            // إذا فشل، جرب python3
+            pythonCommand = "python3"
+        }
+        
+        // تشغيل سكريبت التنزيل
+        commandLine pythonCommand, "$projectDir/script/download_models.py", "$rootDir"
+        
+        // تعيين دليل عمل السكريبت
+        workingDir "$rootDir"
+    }
+
+    // ربط مهمة تنزيل النماذج بعملية البناء
+    preBuild.dependsOn downloadMLModels
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    // المكتبات الأساسية لـ Android و Kotlin
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // مكتبات Lifecycle
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
+    
+    // Coroutines للعمليات غير المتزامنة
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+    
+    // TensorFlow Lite للذكاء الاصطناعي
+    implementation 'org.tensorflow:tensorflow-lite:2.11.0'
+    implementation 'org.tensorflow:tensorflow-lite-support:0.4.3'
+    
+    // مكتبة ML Kit للتعرف على اللغة
+    implementation 'com.google.mlkit:language-id:17.0.4'
+    
+    // مكتبات الصوت والتعرف على الكلام
+    implementation 'com.google.android.gms:play-services-mlkit-speech-recognition:18.0.0'
+    
+    // مكتبات الدعم والاختبار
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
